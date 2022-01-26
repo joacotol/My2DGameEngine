@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Dimension;
+import entity.Player;
 
 // extends basically makes GamePanel a subclass to JPanel
 public class GamePanel extends JPanel implements Runnable{
@@ -18,17 +19,23 @@ public class GamePanel extends JPanel implements Runnable{
     final int scale = 3;
 
     // Actual tile size that will be displayed on screen
-    final int tileSize = originalTileSize * scale; // 48x48 tile 
+    public final int tileSize = originalTileSize * scale; // 48x48 tile 
     // The amount of total tiles show on the screen 16x12 WidthxHeight
     final int maxScreenColumn = 16;
     final int maxScreenRow = 12;
     final int screenWidth = tileSize * maxScreenColumn; // 768 pixels
     final int screenHeight = tileSize * maxScreenRow; // 576 pixels
 
+    // FPS
+    int FPS = 60;
+
     KeyHandler keyH = new KeyHandler();
     // Can be started and stopped
     // When started it keeps the program keeps running until you stop it
     Thread gameThread;
+
+    // From Player class
+    Player player = new Player(this, keyH);
 
     // Set player's default position
     int playerX = 100;
@@ -65,38 +72,57 @@ public class GamePanel extends JPanel implements Runnable{
     // seperately executing thread
     @Override
     public void run() {
+         // Draws the screen every x amount of seconds based on FPS
+        double drawInterval = 1000000000/FPS;
+        double delta = 0;
+        long lastTime = System.nanoTime();
+        long currentTime;
+        // These two variables checks the FPS
+        long timer = 0;
+        int drawCount = 0;
 
         // GAME LOOP
         
         // As long as the gameThread exists it will continue to run the loop
-        while(gameThread != null) {
+        while (gameThread != null) {
 
-            //System.out.println("The game loop is running."); 
+            // Get the current time
+            currentTime = System.nanoTime();
+            
+            // First expression signifies how much time has passed
+            delta += (currentTime - lastTime) / drawInterval;
+            
+            // FPS Counter
+            timer += (currentTime - lastTime);
+            lastTime = currentTime;
 
-            // 1 UPDATE: update information such as character position
-            update();
+            if (delta >= 1) {
+                // 1 UPDATE: update information such as character position
+                update();
+                // 2  DRAW:  draw the screen with the updated information
+                repaint();
+                // Delta resets count
+                delta--;
+                drawCount++;
+            }
 
-            // 2  DRAW:  draw the screen with the updated information
-            repaint();
-
+            // FPS Counter
+            if (timer >= 1000000000) {
+                System.out.println("FPS: " + drawCount);
+                drawCount = 0;
+                timer = 0;
+            }
+            
         }
-        
-        
     }
 
     public void update() {
-
-        // This makes the player character move
-        if(keyH.upPressed == true) {
-
-        }
-
+        player.update();
     }
 
     // This method is called by using repaint()
     // Graphics is a class that has many functions to draw objects on the screen
     public void paintComponent(Graphics g) {
-
         // Format
         // super - the parent class of this class (JPanel)
         super.paintComponent(g);
@@ -107,9 +133,8 @@ public class GamePanel extends JPanel implements Runnable{
         // This changes the Graphics [g] and convert it to Graphics2D in variable [g2]
         Graphics2D g2 = (Graphics2D)g;
 
-        g2.setColor(Color.white);
-        // Draws the player in the panel
-        g2.fillRect(playerX, playerY, tileSize, tileSize);
+        player.draw(g2);
+
         // Dispose of this graphics context and release any system resources it is using
         g2.dispose();
     }
