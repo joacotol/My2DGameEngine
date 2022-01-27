@@ -5,6 +5,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Dimension;
 import entity.Player;
+import tile.TileManager;
 
 // extends basically makes GamePanel a subclass to JPanel
 public class GamePanel extends JPanel implements Runnable{
@@ -21,13 +22,15 @@ public class GamePanel extends JPanel implements Runnable{
     // Actual tile size that will be displayed on screen
     public final int tileSize = originalTileSize * scale; // 48x48 tile 
     // The amount of total tiles show on the screen 16x12 WidthxHeight
-    final int maxScreenColumn = 16;
-    final int maxScreenRow = 12;
-    final int screenWidth = tileSize * maxScreenColumn; // 768 pixels
-    final int screenHeight = tileSize * maxScreenRow; // 576 pixels
+    public final int maxScreenColumn = 16;
+    public final int maxScreenRow = 12;
+    public final int screenWidth = tileSize * maxScreenColumn; // 768 pixels
+    public final int screenHeight = tileSize * maxScreenRow; // 576 pixels
 
     // FPS
     int FPS = 60;
+    
+    TileManager tileM = new TileManager(this);
 
     KeyHandler keyH = new KeyHandler();
     // Can be started and stopped
@@ -36,11 +39,6 @@ public class GamePanel extends JPanel implements Runnable{
 
     // From Player class
     Player player = new Player(this, keyH);
-
-    // Set player's default position
-    int playerX = 100;
-    int playerY = 100;
-    int playerSpeed = 4;
 
     public GamePanel() {
         
@@ -63,13 +61,13 @@ public class GamePanel extends JPanel implements Runnable{
 
         // this passes the GamePanel class to the Thread() constructor
         gameThread = new Thread(this);
-        // This will automaticall call the run() method
+        // This will automatically call the run() method
         gameThread.start();
     }
 
     // When an object implementing interface Runnable is used to create a thread
     // starting the thread causes the object's [run] method to be called in that 
-    // seperately executing thread
+    // Separately executing thread
     @Override
     public void run() {
          // Draws the screen every x amount of seconds based on FPS
@@ -132,6 +130,10 @@ public class GamePanel extends JPanel implements Runnable{
         // text layout
         // This changes the Graphics [g] and convert it to Graphics2D in variable [g2]
         Graphics2D g2 = (Graphics2D)g;
+        
+        // Will draw the tiles using GamePanel
+        // Must be before player.draw()
+         tileM.draw(g2);
 
         player.draw(g2);
 
